@@ -25,14 +25,14 @@ cd qr-code-generator
 
 2. Install required dependencies:
 ```bash
-pip install flet qrcode pillow
+pip install flet qrcode[pil] pillow
 ```
 
 ## Usage
 
 1. Run the application:
 ```bash
-python src/main.py
+flet run
 ```
 
 2. Enter text or URL in the input field
@@ -42,7 +42,7 @@ python src/main.py
 
 ## Requirements
 
-- Python 3.7 or higher
+- Python 3.9 or higher
 - flet
 - qrcode
 - pillow
