@@ -5,7 +5,7 @@ description = ""
 readme = "README.md"
 requires-python = ">=3.9"
 authors = [
-    { name = "Flet developer", email = "you@example.com" }
+    { name = "Flet developer", email = "gauravm5612@gmail.com" }
 ]
 dependencies = [
   "flet==0.26.0"
