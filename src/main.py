@@ -78,14 +78,15 @@ def main(page: ft.Page):
             return False
 
     def on_text_change(e):
+        if e.control.value and not e.control.value.isdigit():
+            e.control.value = ''.join(filter(str.isdigit, e.control.value))
         generate_qr()
+        page.update()
 
-    # Remove box_size_input definition and keep only these text inputs
     border_size_input = ft.TextField(
         label="Border Size (0-8)",
         value="4",
         width=150,
-        input_filter=ft.InputFilter(allow=True, regex_string=r"[0-9]"),
         hint_text="Enter 0-8",
         on_change=on_text_change,
     )
@@ -94,7 +95,6 @@ def main(page: ft.Page):
         label="QR Code Size (100-500)",
         value="200",
         width=150,
-        input_filter=ft.InputFilter(allow=True, regex_string=r"[0-9]"),
         hint_text="Enter 100-500",
         on_change=on_text_change,
     )
