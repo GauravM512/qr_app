@@ -10,6 +10,7 @@ def main(page: ft.Page):
 
     def clear_input_error(e):
         input_field.error_text = None
+        generate_qr()
         page.update()
 
     # Create a text field for user input with on_change handler
@@ -32,11 +33,15 @@ def main(page: ft.Page):
         "Orange": "#FFA500",
     }
 
+    def on_dropdown_change(e):
+        generate_qr()
+
     fill_color_dropdown = ft.Dropdown(
         width=150,
         label="Fill Color",
         options=[ft.dropdown.Option(key=color) for color in COLORS.keys()],
         value="Black",
+        on_change=on_dropdown_change,
     )
 
     bg_color_dropdown = ft.Dropdown(
@@ -44,6 +49,7 @@ def main(page: ft.Page):
         label="Background Color",
         options=[ft.dropdown.Option(key=color) for color in COLORS.keys()],
         value="White",
+        on_change=on_dropdown_change,
     )
 
     # Add QR code customization options
@@ -59,14 +65,20 @@ def main(page: ft.Page):
         label="Error Correction",
         options=[ft.dropdown.Option(key=level) for level in ERROR_LEVELS.keys()],
         value="Low (7%)",
+        on_change=on_dropdown_change,
     )
 
     def validate_number(value, min_val, max_val):
+        if not value:  # Handle empty string
+            return False
         try:
             num = int(value)
             return min_val <= num <= max_val
         except ValueError:
             return False
+
+    def on_text_change(e):
+        generate_qr()
 
     # Remove box_size_input definition and keep only these text inputs
     border_size_input = ft.TextField(
@@ -75,6 +87,7 @@ def main(page: ft.Page):
         width=150,
         input_filter=ft.InputFilter(allow=True, regex_string=r"[0-9]"),
         hint_text="Enter 0-8",
+        on_change=on_text_change,
     )
 
     qr_size_input = ft.TextField(
@@ -83,6 +96,7 @@ def main(page: ft.Page):
         width=150,
         input_filter=ft.InputFilter(allow=True, regex_string=r"[0-9]"),
         hint_text="Enter 100-500",
+        on_change=on_text_change,
     )
 
     # Create an image widget to display the QR code
@@ -109,34 +123,28 @@ def main(page: ft.Page):
     )
 
     # Function to generate the QR code
-    def generate_qr(e):
-        # Validate inputs
-        if not input_field.value.strip():
-            input_field.error_text = "Please enter some text or a URL"
+    def generate_qr():
+        # Only validate input text
+        if not input_field.value or not input_field.value.strip():
+            placeholder.visible = True
+            qr_image.visible = False
             page.update()
             return
 
-        # Validate numeric inputs (removed box size validation)
-        if not validate_number(border_size_input.value, 0, 8):
-            border_size_input.error_text = "Enter a number between 0-8"
-            page.update()
-            return
-        if not validate_number(qr_size_input.value, 100, 500):
-            qr_size_input.error_text = "Enter a number between 100-500"
-            page.update()
-            return
-
-        # Clear any error messages
-        border_size_input.error_text = None
-        qr_size_input.error_text = None
-
-        # Generate the QR code
         try:
+            # Use default values if input is invalid
+            border_size = int(border_size_input.value) if validate_number(border_size_input.value, 0, 8) else 4
+            qr_size = int(qr_size_input.value) if validate_number(qr_size_input.value, 100, 500) else 200
+
+            # Clear error states
+            border_size_input.error_text = None
+            qr_size_input.error_text = None
+
             qr = qrcode.QRCode(
-                version=None,  # Allow automatic version selection
+                version=None,
                 error_correction=ERROR_LEVELS[error_level_dropdown.value],
-                box_size=20,  # Fixed box size
-                border=int(border_size_input.value),
+                box_size=20,
+                border=border_size,
             )
             qr.add_data(input_field.value)
             qr.make(fit=True)
@@ -211,10 +219,6 @@ def main(page: ft.Page):
             page.update()
 
     # Create buttons for generating and saving QR codes
-    generate_button = ft.ElevatedButton(
-        text="Generate QR Code",
-        on_click=generate_qr,
-    )
     save_button = ft.ElevatedButton(
         text="Save QR Code",
         on_click=save_qr,
@@ -257,8 +261,6 @@ def main(page: ft.Page):
         border_size_input,
         ft.Container(height=10),
         qr_size_input,
-        ft.Container(height=20),
-        generate_button,
         ft.Container(height=20),
         save_button,
     ]
