@@ -132,13 +132,21 @@ def main(page: ft.Page):
             return
 
         try:
-            # Use default values if input is invalid
-            border_size = int(border_size_input.value) if validate_number(border_size_input.value, 0, 8) else 4
-            qr_size = int(qr_size_input.value) if validate_number(qr_size_input.value, 100, 500) else 200
+            # Validate and get sizes with proper error checking
+            try:
+                border_size = int(border_size_input.value) if border_size_input.value else 4
+                border_size = max(0, min(border_size, 8))  # Clamp between 0-8
+                
+                qr_size = int(qr_size_input.value) if qr_size_input.value else 200
+                qr_size = max(100, min(qr_size, 500))  # Clamp between 100-500
+            except ValueError:
+                border_size = 4
+                qr_size = 200
 
             # Clear error states
             border_size_input.error_text = None
             qr_size_input.error_text = None
+            input_field.error_text = None
 
             qr = qrcode.QRCode(
                 version=None,
@@ -153,26 +161,26 @@ def main(page: ft.Page):
             bg_color = COLORS[bg_color_dropdown.value]
             
             qr_img = qr.make_image(fill_color=fill_color, back_color=bg_color)
-
-            # Convert back to RGB before saving (to avoid transparency issues)
             qr_img = qr_img.convert("RGB")
             
-            # Resize the image
-            qr_img = qr_img.resize((int(qr_size_input.value), int(qr_size_input.value)))
+            # Ensure size is valid before resizing
+            if qr_size > 0:
+                qr_img = qr_img.resize((qr_size, qr_size))
             
-            # Convert to base64
             buf = BytesIO()
             qr_img.save(buf, format="PNG")
             qr_image.src_base64 = base64.b64encode(buf.getvalue()).decode("utf-8")
-            qr_image.width = qr_size_input.value
-            qr_image.height = qr_size_input.value
+            qr_image.width = qr_size
+            qr_image.height = qr_size
             
-            # Hide placeholder, show QR
             placeholder.visible = False
             qr_image.visible = True
             page.update()
         except Exception as ex:
-            page.show_snack_bar(ft.SnackBar(content=ft.Text(f"Error: {str(ex)}")))
+            # Show error in input field instead of snackbar
+            input_field.error_text = f"Error: {str(ex)}"
+            placeholder.visible = True
+            qr_image.visible = False
             page.update()
 
     def close_dialog(e):
