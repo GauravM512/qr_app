@@ -2,11 +2,11 @@ import flet as ft
 import qrcode
 from io import BytesIO
 import base64
-from PIL import Image
 import os
 
 def main(page: ft.Page):
     page.theme = ft.Theme(color_scheme_seed=ft.Colors.GREY)
+    page.adaptive = True # Enable adaptive layout for mobile devices
 
     def clear_input_error(e):
         input_field.error_text = None
@@ -183,9 +183,10 @@ def main(page: ft.Page):
             qr_image.visible = False
             page.update()
 
+
     def close_dialog(e):
-        dialog.open = False
-        page.update()
+        page.close(dialog)
+
 
     # Create dialog once and reuse it
     dialog = ft.AlertDialog(
@@ -194,17 +195,21 @@ def main(page: ft.Page):
             ft.TextButton("OK", on_click=close_dialog),
         ],
         actions_alignment=ft.MainAxisAlignment.END,
+        modal=True,
     )
 
     def show_save_dialog(file_path):
         # Update dialog content
         dialog.content = ft.Text(f"QR Code saved at:\n{os.path.abspath(file_path)}")
-        page.dialog = dialog
-        dialog.open = True
-        page.update()
+        page.open(dialog)
 
     # Function to save the QR code as a PNG file
     def save_qr(e):
+        if not input_field.value or not input_field.value.strip():
+            input_field.error_text = "Please enter some text or a URL"
+            page.update()
+            return
+            
         if qr_image.src_base64:
             try:
                 file_path = "qrcode.png"
@@ -216,14 +221,12 @@ def main(page: ft.Page):
             except Exception as ex:
                 dialog.title = ft.Text("Error")
                 dialog.content = ft.Text(f"Error saving file: {str(ex)}")
-                page.dialog = dialog
-                dialog.open = True
+                page.open(dialog)
                 page.update()
         else:
             dialog.title = ft.Text("Error")
             dialog.content = ft.Text("No QR Code to save!")
-            page.dialog = dialog
-            dialog.open = True
+            page.open(dialog)
             page.update()
 
     # Create buttons for generating and saving QR codes
