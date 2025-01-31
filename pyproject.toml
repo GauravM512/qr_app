@@ -8,7 +8,9 @@ authors = [
     { name = "Flet developer", email = "gauravm5612@gmail.com" }
 ]
 dependencies = [
-  "flet==0.26.0"
+  "flet==0.26.0",
+  "pillow>=11.1.0",
+  "qrcode[pil]>=7.4.2",
 ]
 
 [tool.flet]
