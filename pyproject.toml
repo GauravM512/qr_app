@@ -34,6 +34,8 @@ path = "src"
 [tool.uv]
 dev-dependencies = [
     "flet[all]==0.26.0",
+      "pillow>=11.1.0",
+  "qrcode[pil]>=7.4.2",
 ]
 
 [tool.poetry]
