@@ -164,7 +164,7 @@ def main(page: ft.Page):
             qr_img = qr_img.convert("RGB")
             
             # Ensure size is valid before resizing
-            if qr_size > 0:
+            if (qr_size > 0):
                 qr_img = qr_img.resize((qr_size, qr_size))
             
             buf = BytesIO()
@@ -203,6 +203,26 @@ def main(page: ft.Page):
         dialog.content = ft.Text(f"QR Code saved at:\n{os.path.abspath(file_path)}")
         page.open(dialog)
 
+    # Create the FilePicker control and add it to the page's overlay
+    def on_file_save(e):
+        if e.path:
+            try:
+                # Decode the base64 image
+                img_data = base64.b64decode(qr_image.src_base64)
+                with open(e.path, "wb") as f:
+                    f.write(img_data)
+                show_save_dialog(e.path)
+            except Exception as ex:
+                dialog.title = ft.Text("Error")
+                dialog.content = ft.Text(f"Error saving file: {str(ex)}")
+                page.open(dialog)
+                page.update()
+
+    file_picker = ft.FilePicker(
+        on_result=on_file_save
+    )
+    page.overlay.append(file_picker)
+
     # Function to save the QR code as a PNG file
     def save_qr(e):
         if not input_field.value or not input_field.value.strip():
@@ -211,18 +231,13 @@ def main(page: ft.Page):
             return
             
         if qr_image.src_base64:
-            try:
-                file_path = "qrcode.png"
-                # Decode the base64 image
-                img_data = base64.b64decode(qr_image.src_base64)
-                with open(file_path, "wb") as f:
-                    f.write(img_data)
-                show_save_dialog(file_path)
-            except Exception as ex:
-                dialog.title = ft.Text("Error")
-                dialog.content = ft.Text(f"Error saving file: {str(ex)}")
-                page.open(dialog)
-                page.update()
+            file_picker.save_file(
+                dialog_title="Save QR Code",
+                file_name="qrcode.png",
+                initial_directory=os.getcwd(),
+                file_type="image",
+                allowed_extensions=["png"]
+            )
         else:
             dialog.title = ft.Text("Error")
             dialog.content = ft.Text("No QR Code to save!")
@@ -273,7 +288,7 @@ def main(page: ft.Page):
         ft.Container(height=10),
         qr_size_input,
         ft.Container(height=20),
-        save_button,
+        save_button,  # Ensure the save button is included here
     ]
 
     # Set initial visibility
